@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: ai
+    # DataSource Config
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: lpz
+    password: lpz2003...
+    url: jdbc:mysql://localhost:3306/graduation-project
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+mybatis-plus:
+  configuration:
+    # mybatis 输出日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # MyBatis 配置,取消下划线转驼峰
+    map-underscore-to-camel-case: false
+  # 配置逻辑删除
+  global-config:
+    db-config:
+      logic-delete-field: isDelete # 全局逻辑删除字段名
+      logic-delete-value: 1 # 逻辑已删除值
+      logic-not-delete-value: 0 # 逻辑未删除值
+
