@@ -1,9 +1,9 @@
 package org.lpz.graduationprojectbackend.exception;
 
 import lombok.extern.slf4j.Slf4j;
-import org.lpz.usercenter.common.BaseResponse;
-import org.lpz.usercenter.common.ErrorCode;
-import org.lpz.usercenter.common.ResultUtils;
+import org.lpz.graduationprojectbackend.common.BaseResponse;
+import org.lpz.graduationprojectbackend.common.ErrorCode;
+import org.lpz.graduationprojectbackend.common.ResultUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 

@@ -1,6 +1,6 @@
 package org.lpz.graduationprojectbackend.exception;
 
-import org.lpz.usercenter.common.ErrorCode;
+import org.lpz.graduationprojectbackend.common.ErrorCode;
 
 /**
  * 自定义异常

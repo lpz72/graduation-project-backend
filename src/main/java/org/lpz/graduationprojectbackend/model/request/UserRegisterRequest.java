@@ -1,5 +1,6 @@
 package org.lpz.graduationprojectbackend.model.request;
 
+import io.swagger.models.auth.In;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -21,5 +22,5 @@ public class UserRegisterRequest implements Serializable {
 
     private String checkPassword;
 
-    private String planetCode;
+    private Integer userRole;
 }
