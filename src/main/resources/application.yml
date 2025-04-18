@@ -16,6 +16,9 @@ spring:
     port: 6379
     host: localhost
     database: 6
+  # 解决8小时时差
+  jackson:
+    time-zone: GMT+8
 server:
   port: 8080
   servlet:

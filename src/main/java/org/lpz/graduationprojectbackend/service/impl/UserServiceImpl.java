@@ -174,12 +174,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         saftyUser.setPhone(user.getPhone());
         saftyUser.setEmail(user.getEmail());
         saftyUser.setUserRole(user.getUserRole());
-        saftyUser.setUserStatus(user.getUserStatus());
-        saftyUser.setCreateTime(user.getCreateTime());
         saftyUser.setAge(user.getAge());
-        saftyUser.setIdNumber(user.getIdNumber());
         saftyUser.setPosition(user.getPosition());
         saftyUser.setDepartment(user.getDepartment());
+        saftyUser.setHospital(user.getHospital());
+        saftyUser.setIdNumber(user.getIdNumber());
+        saftyUser.setSpecialty(user.getSpecialty());
 
         return saftyUser;
     }
@@ -238,15 +238,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
-        String userPassword = user.getUserPassword();
+        //todo 是否添加修改密码功能
+//        String userPassword = user.getUserPassword();
 
-        //密码长度不小于8位
-        if (userPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
-        }
-        //2.加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((salt + userPassword).getBytes());
-        user.setUserPassword(encryptPassword);
+//        //密码长度不小于8位
+//        if (userPassword.length() < 8) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR,"密码长度过短");
+//        }
+//        //加密
+//        String encryptPassword = DigestUtils.md5DigestAsHex((salt + userPassword).getBytes());
+//        user.setUserPassword(encryptPassword);
+
 
         return userMapper.updateById(user);
     }

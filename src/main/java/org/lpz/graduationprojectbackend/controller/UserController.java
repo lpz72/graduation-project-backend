@@ -3,6 +3,7 @@ package org.lpz.graduationprojectbackend.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.lpz.graduationprojectbackend.common.BaseResponse;
@@ -139,28 +140,45 @@ public class UserController {
     }
 
     /**
-     * 搜索所有用户
-     * @param username
-     * @param request
+     * 获取根据id脱敏的信息
+     * @param userId
      * @return
      */
     @GetMapping("/search")
-    public BaseResponse<List<User>> searchUsers(String username,HttpServletRequest request){
-        //HttpServletRequest request是获取用户登录态
-        // 鉴权，仅管理员可查询
-        if (!userService.isAdmin(request)){
-            throw new BusinessException(ErrorCode.NO_AUTH);
-        }
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        if (StringUtils.isNotBlank(username)){
-            queryWrapper.like("username",username);
+    public BaseResponse<User> getUser(Integer userId) {
+        if (userId < 0) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
-        List<User> userList = userService.list(queryWrapper);
-        List<User> collect = userList.stream().map(user -> userService.getSavetyUser(user)).collect(Collectors.toList());
-        return ResultUtils.success(collect);
+        User user = userService.getById(userId);
+        user = userService.getSavetyUser(user);
+        return ResultUtils.success(user);
 
     }
+
+//    /**
+//     * 搜索所有用户
+//     * @param username
+//     * @param request
+//     * @return
+//     */
+//    @GetMapping("/search")
+//    public BaseResponse<List<User>> searchUsers(String username,HttpServletRequest request){
+//        //HttpServletRequest request是获取用户登录态
+//        // 鉴权，仅管理员可查询
+//        if (!userService.isAdmin(request)){
+//            throw new BusinessException(ErrorCode.NO_AUTH);
+//        }
+//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+//        if (StringUtils.isNotBlank(username)){
+//            queryWrapper.like("username",username);
+//        }
+//
+//        List<User> userList = userService.list(queryWrapper);
+//        List<User> collect = userList.stream().map(user -> userService.getSavetyUser(user)).collect(Collectors.toList());
+//        return ResultUtils.success(collect);
+//
+//    }
 
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request){

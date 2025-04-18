@@ -23,3 +23,35 @@ create table user
 )
     comment '用户表';
 
+-- 健康资讯表
+create table news
+(
+    id         bigint auto_increment comment 'id'
+        primary key,
+    title      varchar(256)                       null comment '资讯标题',
+    Url        varchar(512)                       null comment '封面图Url',
+    category   varchar(256)                       null comment '类别',
+    content    text                               null comment '内容',
+    readCount  bigint                             null comment '阅读次数',
+    source     varchar(512)                       null comment '来源',
+    author     varchar(256)                       null comment '作者',
+    createTime datetime default CURRENT_TIMESTAMP null comment '发布时间',
+    isDelete   int      default 0                 not null comment '逻辑删除'
+)
+    comment '健康资讯表';
+
+-- 就诊记录表
+create table medicalrecord
+(
+    id             bigint auto_increment comment 'id'
+        primary key,
+    userId         bigint                                 not null comment '病人id',
+    doctor         varchar(256) default '无'              not null comment '医生姓名',
+    nurse          varchar(256) default '无'              not null comment '护士',
+    stateOfIllness text                                   null comment '病情',
+    createTime     datetime     default CURRENT_TIMESTAMP null comment '就诊时间',
+    isDelete       tinyint      default 0                 not null comment '逻辑删除（1：删除）'
+)
+    comment '就诊记录表';
+
+
