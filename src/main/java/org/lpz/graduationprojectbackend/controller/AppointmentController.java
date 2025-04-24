@@ -91,7 +91,7 @@ public class AppointmentController {
      * @return
      */
     @GetMapping("/schedule/worker/byDate")
-    public BaseResponse<List<Schedule>> getScheduleOfWorker(long userId,String time) {
+    public BaseResponse<List<Schedule>> getScheduleOfWorkerByDate(long userId,String time) {
         if (time == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -141,7 +141,7 @@ public class AppointmentController {
     }
 
     /**
-     * 取消预约，更新type
+     * 取消预约，更新type，对应排班信息的可预约人数+1
      * @param id
      * @return
      */
@@ -169,6 +169,46 @@ public class AppointmentController {
 
         return ResultUtils.success(emergency);
 
+    }
+
+
+    /**
+     * 根据id获取该医生或护士所有的预约信息
+     * @param workerId
+     * @return
+     */
+    @GetMapping("/worker")
+    public BaseResponse<List<Appointment>> getAppointmentOfWorker(long workerId) {
+        if (workerId < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        List<Appointment> appointment = appointmentService.getAppointmentOfWorker(workerId);
+        if (appointment == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        return ResultUtils.success(appointment);
+    }
+
+    /**
+     * 根据id和时间获取该医生或护士所有的预约信息
+     * @param workerId
+     * @param time
+     * @return
+     */
+    @GetMapping("/worker/byDate")
+    public BaseResponse<List<Appointment>> getAppointmentOfWorkerByDate(long workerId,String time) {
+        if (workerId < 0 || time == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        List<Appointment> appointment = appointmentService.getAppointmentOfWorker(workerId,time);
+        if (appointment == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        return ResultUtils.success(appointment);
     }
 
 

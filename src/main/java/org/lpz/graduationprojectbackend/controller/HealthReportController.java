@@ -1,6 +1,7 @@
 package org.lpz.graduationprojectbackend.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.lpz.graduationprojectbackend.common.BaseResponse;
 import org.lpz.graduationprojectbackend.common.ErrorCode;
 import org.lpz.graduationprojectbackend.common.ResultUtils;
@@ -13,9 +14,7 @@ import org.lpz.graduationprojectbackend.service.ElderhealthService;
 import org.lpz.graduationprojectbackend.service.HealthreportService;
 import org.lpz.graduationprojectbackend.service.NewsService;
 import org.lpz.graduationprojectbackend.service.UserService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -32,14 +31,14 @@ public class HealthReportController {
     private HealthreportService healthreportService;
 
     /**
-     * 获取所有体检记录
+     * 根据身份证号获取所有体检记录
      * @param request
      * @return
      */
     @GetMapping("/list")
-    public BaseResponse<List<HealthReportQuery>> getHealthRecords(long userId,HttpServletRequest request){
+    public BaseResponse<List<HealthReportQuery>> getHealthRecords(String idNumber,HttpServletRequest request){
 
-        if (userId < 0) {
+        if (idNumber == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
@@ -52,7 +51,7 @@ public class HealthReportController {
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
 
-        List<HealthReportQuery> records = healthreportService.getHealthRecords(userId);
+        List<HealthReportQuery> records = healthreportService.getHealthRecords(idNumber);
         if (records == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
@@ -61,15 +60,32 @@ public class HealthReportController {
     }
 
 
-//    @GetMapping("/add")
-//    public BaseResponse<Integer> addReadCount(Integer id) {
-//        if(id == null) {
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-//        }
-//
-//        return ResultUtils.success(newsService.addReadCount(id));
-//
-//    }
+    /**
+     * 增加一个体检报告
+     * @param healthreport
+     * @return
+     */
+    @PostMapping("/add")
+    public BaseResponse<Integer> addReport(@RequestBody Healthreport healthreport) {
+        if(healthreport == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        return ResultUtils.success(healthreportService.addReport(healthreport));
+
+    }
+
+    @GetMapping("/search")
+    public BaseResponse<List<Healthreport>> searchReport(String username,String idNumber) {
+        if (StringUtils.isAnyBlank(username,idNumber)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        List<Healthreport> list = healthreportService.searchReport(username, idNumber);
+
+        return ResultUtils.success(list);
+
+    }
 
 
 }

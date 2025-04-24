@@ -245,50 +245,42 @@ public class UserController {
         return ResultUtils.success(userPage);
     }
 
+    /**
+     * 根据角色类别查询用户
+     * @param type
+     * @return
+     */
     @GetMapping("/list")
-    public BaseResponse<Integer> allUsersNum(HttpServletRequest request){
-
-        User loginUser = userService.getLoginUser(request);
-        String key = String.format("yupao:user:list:%s",loginUser.getId());
-        ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
-
-        //如果有缓存，直接读缓存
-        Integer count = (Integer) valueOperations.get(key);
-        if (count != null) {
-            return ResultUtils.success(count);
+    public BaseResponse<List<User>> allUsersByType(int type){
+        if (type < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        //无缓存，查数据库，设置缓存
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        //位置查询条件，更快
-        queryWrapper.isNotNull("id");
-        count = userService.count(queryWrapper);
-        try {
-            valueOperations.set(key,count,30000, TimeUnit.MILLISECONDS);
-            System.out.println("111");
-        } catch (Exception e) {
-            log.error("redis set key error",e);
+        List<User> list = userService.allUsersByType(type);
+        if (list == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
-        return ResultUtils.success(count);
+
+        return ResultUtils.success(list);
+    }
+
+    /**
+     * 根据身份证号查询用户
+     * @param idNumber
+     * @return
+     */
+    @GetMapping("/list/byIdNumber")
+    public BaseResponse<User> getUserByIdNumber(String idNumber) {
+        if (idNumber == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        User user = userService.getUserByIdNumber(idNumber);
+
+        return ResultUtils.success(user);
+
     }
 
 
-//    /**
-//     * 匹配最相似的用户
-//     * @param num
-//     * @param request
-//     * @return
-//     */
-//    @GetMapping("/match")
-//    public BaseResponse<List<User>> matchUsers(long num, HttpServletRequest request){
-//        if (num <= 0 || num > 20) {
-//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-//        }
-//
-//        User loginUser = userService.getLoginUser(request);
-//        List<User> list = userService.matchUsers(num,loginUser);
-//        return ResultUtils.success(list);
-//
-//    }
 
 }

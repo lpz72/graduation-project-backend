@@ -2,6 +2,7 @@ package org.lpz.graduationprojectbackend.controller;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.lpz.graduationprojectbackend.common.BaseResponse;
 import org.lpz.graduationprojectbackend.common.ErrorCode;
 import org.lpz.graduationprojectbackend.common.ResultUtils;
@@ -11,9 +12,7 @@ import org.lpz.graduationprojectbackend.model.domain.Joinactivities;
 import org.lpz.graduationprojectbackend.model.domain.News;
 import org.lpz.graduationprojectbackend.model.domain.User;
 import org.lpz.graduationprojectbackend.service.*;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -57,14 +56,14 @@ public class ActivitiesController {
     }
 
 
-    @GetMapping("/add")
-    public BaseResponse<Integer> addActivity(long userId,long activityId,Integer type) {
-        if(userId < 0 || activityId < 0 || type == null) {
+    @PostMapping("/add")
+    public BaseResponse<Integer> addActivity(@RequestBody Joinactivities joinactivities) {
+        if(joinactivities == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
 
-        int i = joinactivitiesService.addActivity(userId, activityId, type);
+        int i = joinactivitiesService.addActivity(joinactivities);
 
         return ResultUtils.success(i);
 
@@ -86,16 +85,17 @@ public class ActivitiesController {
 
     /**
      * 取消预约，更新type
+     * @param userId
      * @param activityId
      * @return
      */
     @GetMapping("/cancel")
-    public BaseResponse<Integer> cancelJoin(long activityId) {
-        if (activityId < 0) {
+    public BaseResponse<Integer> cancelJoin(long userId,long activityId) {
+        if (activityId < 0 || userId < 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        int i = joinactivitiesService.cancelJoin(activityId);
+        int i = joinactivitiesService.cancelJoin(userId,activityId);
         return ResultUtils.success(i);
     }
 

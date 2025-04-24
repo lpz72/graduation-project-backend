@@ -76,4 +76,17 @@ public interface UserService extends IService<User> {
      User getLoginUser(HttpServletRequest request);
 
 
+    /**
+     * 根据用户角色类别查询用户
+     * @param type
+     * @return
+     */
+    List<User> allUsersByType(int type);
+
+    /**
+     * 根据身份证号查询用户
+     * @param idNumber
+     * @return
+     */
+    User getUserByIdNumber(String idNumber);
 }

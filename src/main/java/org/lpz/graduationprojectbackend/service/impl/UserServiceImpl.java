@@ -180,6 +180,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         saftyUser.setHospital(user.getHospital());
         saftyUser.setIdNumber(user.getIdNumber());
         saftyUser.setSpecialty(user.getSpecialty());
+        saftyUser.setAddress(user.getAddress());
 
         return saftyUser;
     }
@@ -238,6 +239,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
+        //身份证号不能重复
+        String idNumber = user.getIdNumber();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("idNumber",idNumber);
+        Integer i = userMapper.selectCount(queryWrapper);
+        if (i > 1) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"身份证号输入有误");
+        } else if (i == 1) {
+            User user1 = userMapper.selectOne(queryWrapper);
+            if (!Objects.equals(user.getId(), user1.getId())) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR,"身份证号输入有误");
+            }
+        }
+
         //todo 是否添加修改密码功能
 //        String userPassword = user.getUserPassword();
 
@@ -267,7 +282,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return (User) userObj;
     }
 
+    @Override
+    public List<User> allUsersByType(int type) {
 
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userRole",type);
+
+        return userMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public User getUserByIdNumber(String idNumber) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("idNumber",idNumber);
+        return userMapper.selectOne(queryWrapper);
+
+    }
 
 
 }
