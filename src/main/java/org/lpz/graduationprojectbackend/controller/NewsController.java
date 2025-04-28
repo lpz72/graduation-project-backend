@@ -11,9 +11,7 @@ import org.lpz.graduationprojectbackend.exception.BusinessException;
 import org.lpz.graduationprojectbackend.model.domain.Elderhealth;
 import org.lpz.graduationprojectbackend.model.domain.News;
 import org.lpz.graduationprojectbackend.model.domain.User;
-import org.lpz.graduationprojectbackend.model.request.UserInformationRequest;
-import org.lpz.graduationprojectbackend.model.request.UserLoginRequest;
-import org.lpz.graduationprojectbackend.model.request.UserRegisterRequest;
+import org.lpz.graduationprojectbackend.model.request.*;
 import org.lpz.graduationprojectbackend.service.ElderhealthService;
 import org.lpz.graduationprojectbackend.service.NewsService;
 import org.lpz.graduationprojectbackend.service.UserService;
@@ -48,15 +46,14 @@ public class NewsController {
      */
     @GetMapping("/list")
     public BaseResponse<List<News>> getNews(HttpServletRequest request){
-
-        if (request == null){
-            throw new BusinessException(ErrorCode.NO_AUTH);
-        }
-
-        User loginUser = userService.getLoginUser(request);
-        if (loginUser == null) {
-            throw new BusinessException(ErrorCode.NO_AUTH);
-        }
+//        if (request == null){
+//            throw new BusinessException(ErrorCode.NO_AUTH);
+//        }
+//
+//        User loginUser = userService.getLoginUser(request);
+//        if (loginUser == null) {
+//            throw new BusinessException(ErrorCode.NO_AUTH);
+//        }
 
         List<News> news = newsService.getNews();
         if (news == null) {
@@ -67,7 +64,12 @@ public class NewsController {
     }
 
 
-    @GetMapping("/add")
+    /**
+     * 阅读次数+1
+     * @param id
+     * @return
+     */
+    @GetMapping("/addReadCount")
     public BaseResponse<Integer> addReadCount(Integer id) {
         if(id == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -75,6 +77,57 @@ public class NewsController {
 
         return ResultUtils.success(newsService.addReadCount(id));
 
+    }
+
+    /**
+     * 添加一个资讯
+     * @param news
+     * @return
+     */
+    @PostMapping("/add")
+    public BaseResponse<Boolean> addNews(@RequestBody News news) {
+        if(news == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        return ResultUtils.success(newsService.save(news));
+
+    }
+
+    /**
+     * 删除一个资讯
+     * @param newDeleteRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteNew(@RequestBody NewDeleteRequest newDeleteRequest, HttpServletRequest request){
+        if (!userService.isAdmin(request)){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        if (newDeleteRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        boolean b = newsService.removeById(newDeleteRequest.getId());//已经配置过逻辑删除，所以mybatis-plus会自动改为逻辑删除
+        return ResultUtils.success(b);
+
+    }
+
+    /**
+     * 更新一个资讯
+     * @param news
+     * @return
+     */
+    @PostMapping("/update")
+    public BaseResponse<Boolean> updateUser(@RequestBody News news){
+        //检验数据是否为空
+        if (news == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        boolean b = newsService.updateById(news);
+        return ResultUtils.success(b);
     }
 
 

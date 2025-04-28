@@ -12,10 +12,7 @@ import org.lpz.graduationprojectbackend.common.ResultUtils;
 import org.lpz.graduationprojectbackend.exception.BusinessException;
 import org.lpz.graduationprojectbackend.model.domain.Elderhealth;
 import org.lpz.graduationprojectbackend.model.domain.User;
-import org.lpz.graduationprojectbackend.model.request.UpdateTagsRequest;
-import org.lpz.graduationprojectbackend.model.request.UserInformationRequest;
-import org.lpz.graduationprojectbackend.model.request.UserLoginRequest;
-import org.lpz.graduationprojectbackend.model.request.UserRegisterRequest;
+import org.lpz.graduationprojectbackend.model.request.*;
 import org.lpz.graduationprojectbackend.service.ElderhealthService;
 import org.lpz.graduationprojectbackend.service.UserService;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -60,13 +57,14 @@ public class UserController {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
+        int register = userRegisterRequest.getRegister();
         int userRole = userRegisterRequest.getUserRole();
 
         if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
 
-        long id = userService.userRegister(userAccount,userPassword,checkPassword,userRole);
+        long id = userService.userRegister(userAccount,userPassword,checkPassword,userRole,register);
         return ResultUtils.success(id);
     }
 
@@ -156,40 +154,17 @@ public class UserController {
 
     }
 
-//    /**
-//     * 搜索所有用户
-//     * @param username
-//     * @param request
-//     * @return
-//     */
-//    @GetMapping("/search")
-//    public BaseResponse<List<User>> searchUsers(String username,HttpServletRequest request){
-//        //HttpServletRequest request是获取用户登录态
-//        // 鉴权，仅管理员可查询
-//        if (!userService.isAdmin(request)){
-//            throw new BusinessException(ErrorCode.NO_AUTH);
-//        }
-//        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-//        if (StringUtils.isNotBlank(username)){
-//            queryWrapper.like("username",username);
-//        }
-//
-//        List<User> userList = userService.list(queryWrapper);
-//        List<User> collect = userList.stream().map(user -> userService.getSavetyUser(user)).collect(Collectors.toList());
-//        return ResultUtils.success(collect);
-//
-//    }
 
     @PostMapping("/delete")
-    public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest request){
+    public BaseResponse<Boolean> deleteUser(@RequestBody UserDeleteRequest userDeleteRequest, HttpServletRequest request){
         if (!userService.isAdmin(request)){
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
-        if (id <= 0){
+        if (userDeleteRequest == null){
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        boolean b = userService.removeById(id);//已经配置过逻辑删除，所以mybatis-plus会自动改为逻辑删除
+        boolean b = userService.removeById(userDeleteRequest.getId());//已经配置过逻辑删除，所以mybatis-plus会自动改为逻辑删除
         return ResultUtils.success(b);
 
     }
@@ -220,29 +195,37 @@ public class UserController {
         return ResultUtils.success(i);
     }
 
-    @GetMapping("/recommend")
-    public BaseResponse<Page<User>> recommendUsers(long pageSize, long pageNum, HttpServletRequest request){
-        User loginUser = userService.getLoginUser(request);
-        //使用页数存储key
-        String key = String.format("yupao:user:recommend:%d",pageNum);
-        ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
-
-        //如果有缓存，直接读缓存
-        Page<User> userPage = (Page<User>) valueOperations.get(key);
-        if (userPage != null) {
-            return ResultUtils.success(userPage);
+    /**
+     * 查询所有的注册申请(管理员、护士、医生)
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/apply")
+    public BaseResponse<List<User>> applyList(HttpServletRequest request){
+        if (!userService.isAdmin(request)){
+            throw new BusinessException(ErrorCode.NO_AUTH);
         }
 
-        //无缓存，查数据库，设置缓存
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        //使用分页
-         userPage = userService.page(new Page<>(pageNum,pageSize),queryWrapper);
-        try {
-            valueOperations.set(key,userPage,30000, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            log.error("redis set key error",e);
+        List<User> list = userService.applyList();
+        if (list == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
         }
-        return ResultUtils.success(userPage);
+
+        return ResultUtils.success(list);
+    }
+
+    /**
+     * 同意注册申请
+     * @param userId
+     * @return
+     */
+    @GetMapping("/apply/confirm")
+    public BaseResponse<Integer> applyConfirm(long userId){
+        if (userId < 0){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        return ResultUtils.success(userService.applyConfirm(userId));
     }
 
     /**
@@ -251,14 +234,17 @@ public class UserController {
      * @return
      */
     @GetMapping("/list")
-    public BaseResponse<List<User>> allUsersByType(int type){
-        if (type < 0) {
+    public BaseResponse<List<User>> allUsersByType(int type,HttpServletRequest request){
+        if (type < 0 || request == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-
+        User user = userService.getLoginUser(request);
         List<User> list = userService.allUsersByType(type);
         if (list == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+        if (user.getUserRole() != 0) {
+            list = list.stream().map(user1 -> userService.getSavetyUser(user1)).collect(Collectors.toList());
         }
 
         return ResultUtils.success(list);
@@ -278,6 +264,18 @@ public class UserController {
         User user = userService.getUserByIdNumber(idNumber);
 
         return ResultUtils.success(user);
+
+    }
+
+    @GetMapping("/reset")
+    public BaseResponse<Integer> resetPassword(long id) {
+        if (id < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        int i = userService.resetPassword(id);
+
+        return ResultUtils.success(i);
 
     }
 

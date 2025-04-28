@@ -20,9 +20,10 @@ public interface UserService extends IService<User> {
      * @param userPassword 密码
      * @param checkPassword 校验密码
      * @param userRole 用户角色
+     * @param register
      * @return 用户id
      */
-    long userRegister (String userAccount,String userPassword,String checkPassword,Integer userRole);
+    long userRegister (String userAccount,String userPassword,String checkPassword,Integer userRole,int register);
 
     /**
      * 用户登录
@@ -89,4 +90,24 @@ public interface UserService extends IService<User> {
      * @return
      */
     User getUserByIdNumber(String idNumber);
+
+    /**
+     * 重置用户密码
+     * @param id
+     * @return
+     */
+    int resetPassword(long id);
+
+    /**
+     * 查询所有的注册申请(管理员、护士、医生)
+     * @return
+     */
+    List<User> applyList();
+
+    /**
+     * 同意注册申请
+     * @param userId
+     * @return
+     */
+    Integer applyConfirm(long userId);
 }

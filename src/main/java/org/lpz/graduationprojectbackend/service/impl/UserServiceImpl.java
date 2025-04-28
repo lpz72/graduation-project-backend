@@ -48,7 +48,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword,Integer userRole) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword,Integer userRole,int register) {
         //1.校验
         if (StringUtils.isAnyBlank(userAccount,userPassword,checkPassword)){
             throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
@@ -88,6 +88,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword); //保存加密后的密码
         user.setUserRole(userRole);
+        user.setRegister(register);
         int result = userMapper.insert(user);
         if (result != 1){
             throw new BusinessException(ErrorCode.INSERT_ERROR);
@@ -136,6 +137,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount",userAccount);//设置查询条件
         queryWrapper.eq("userPassword",encryptPassword);
+        queryWrapper.eq("register",0);
         User user = userMapper.selectOne(queryWrapper);
         //用户不存在
         if (user == null){
@@ -205,7 +207,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public boolean isAdmin(HttpServletRequest request){
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User user = (User) userObj;
-        if (user == null || user.getUserRole() != ADMIN_ROLE){
+        if (user == null || user.getUserRole() != 0){
             return false;
         }
 
@@ -287,6 +289,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userRole",type);
+        queryWrapper.eq("register",0);
 
         return userMapper.selectList(queryWrapper);
     }
@@ -297,6 +300,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("idNumber",idNumber);
         return userMapper.selectOne(queryWrapper);
 
+    }
+
+    @Override
+    public int resetPassword(long id) {
+
+        User user = userMapper.selectById(id);
+        String encryptPassword = DigestUtils.md5DigestAsHex((salt + "12345678").getBytes());
+        user.setUserPassword(encryptPassword);
+        return userMapper.updateById(user);
+
+    }
+
+    @Override
+    public List<User> applyList() {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("register",1);
+        return userMapper.selectList(queryWrapper);
+
+    }
+
+    @Override
+    public Integer applyConfirm(long userId) {
+        User user = userMapper.selectById(userId);
+        user.setRegister(0);
+        return userMapper.updateById(user);
     }
 
 

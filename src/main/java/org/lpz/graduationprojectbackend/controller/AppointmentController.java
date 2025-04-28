@@ -10,10 +10,9 @@ import org.lpz.graduationprojectbackend.model.domain.Appointment;
 import org.lpz.graduationprojectbackend.model.domain.News;
 import org.lpz.graduationprojectbackend.model.domain.Schedule;
 import org.lpz.graduationprojectbackend.model.domain.User;
-import org.lpz.graduationprojectbackend.service.AppointmentService;
-import org.lpz.graduationprojectbackend.service.ElderhealthService;
-import org.lpz.graduationprojectbackend.service.NewsService;
-import org.lpz.graduationprojectbackend.service.UserService;
+import org.lpz.graduationprojectbackend.model.request.ScheduleDeleteRequest;
+import org.lpz.graduationprojectbackend.model.request.UserDeleteRequest;
+import org.lpz.graduationprojectbackend.service.*;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -27,6 +26,12 @@ public class AppointmentController {
 
     @Resource
     private AppointmentService appointmentService;
+
+    @Resource
+    private ScheduleService scheduleService;
+
+    @Resource
+    private UserService userService;
 
     /**
      * 获取对应科室的所有医生
@@ -211,6 +216,50 @@ public class AppointmentController {
         return ResultUtils.success(appointment);
     }
 
+    /**
+     * 添加排班信息
+     * @param schedule
+     * @return
+     */
+    @PostMapping("/schedule/add")
+    public BaseResponse<Integer> addSchedule(@RequestBody Schedule schedule) {
+        if (schedule == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        boolean i = scheduleService.save(schedule);
+        return ResultUtils.success(i ? 1 : 0);
+    }
+
+    /**
+     * 修改排班信息
+     * @param schedule
+     * @return
+     */
+    @PostMapping("/schedule/update")
+    public BaseResponse<Integer> updateSchedule(@RequestBody Schedule schedule) {
+        if (schedule == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        boolean i = scheduleService.updateById(schedule);
+        return ResultUtils.success(i ? 1 : 0);
+    }
+
+
+    @PostMapping("/schedule/delete")
+    public BaseResponse<Boolean> deleteSchedule(@RequestBody ScheduleDeleteRequest scheduleDeleteRequest, HttpServletRequest request){
+        if (!userService.isAdmin(request)){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        if (scheduleDeleteRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        boolean b = scheduleService.removeById(scheduleDeleteRequest.getId());//已经配置过逻辑删除，所以mybatis-plus会自动改为逻辑删除
+        return ResultUtils.success(b);
+
+    }
 
 
 }

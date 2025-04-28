@@ -4,16 +4,16 @@ package org.lpz.graduationprojectbackend.model.request;
 import lombok.Data;
 
 /**
- * 用户退出队伍请求体
+ * 删除排班信息请求体
  */
 @Data
-public class TeamQuitRequest {
+public class ScheduleDeleteRequest {
 
 
     /**
-     *  队伍id
+     *  scheduleId
      */
-    private Long teamId;
+    private Long id;
 
 
 
