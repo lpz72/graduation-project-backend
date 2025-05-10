@@ -133,6 +133,11 @@ public class MedicalRecordController {
         return ResultUtils.success(records);
     }
 
+    /**
+     * 添加一个就诊报告
+     * @param medicalrecord
+     * @return
+     */
     @PostMapping("/add")
     public BaseResponse<Integer> addRecord(@RequestBody Medicalrecord medicalrecord) {
         if (medicalrecord == null) {

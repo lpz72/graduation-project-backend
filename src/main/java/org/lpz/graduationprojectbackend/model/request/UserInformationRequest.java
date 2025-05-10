@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class UserInformationRequest implements Serializable {
@@ -25,4 +26,5 @@ public class UserInformationRequest implements Serializable {
     private String otherDiseases;
     private Integer isDelete;
     private Date createTime;
+    private List<String> tags;
 }

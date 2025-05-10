@@ -1,70 +1,55 @@
-//package org.lpz.graduationprojectbackend.job;
-//
-//import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-//import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-//import lombok.extern.slf4j.Slf4j;
-//import org.lpz.usercenter.model.domain.User;
-//import org.lpz.usercenter.service.UserService;
-//import org.redisson.api.RLock;
-//import org.redisson.api.RedissonClient;
-//import org.springframework.data.redis.core.RedisTemplate;
-//import org.springframework.data.redis.core.ValueOperations;
-//import org.springframework.scheduling.annotation.Scheduled;
-//import org.springframework.stereotype.Component;
-//
-//import javax.annotation.Resource;
-//import java.util.Arrays;
-//import java.util.List;
-//import java.util.concurrent.TimeUnit;
-//
-//@Component
-//@Slf4j
-//public class PreCacheJob {
-//
-//    @Resource
-//    private UserService userService;
-//
-//    @Resource
-//    private RedisTemplate<String,Object> redisTemplate;
-//
-//    @Resource
-//    private RedissonClient redissonClient;
-//
-//    //重点用户
-//    List<Long> mainUserList = Arrays.asList(1L);
-//
-//    //每天执行，预热推荐用户
-//    //表示在每天的00:25分定时执行
-//    @Scheduled(cron = "0 25 0 * * *")
-//    public void doCacheRecommendUser(){
-//        RLock rLock = redissonClient.getLock("yupao:precachejob:docache:lock");
-//        try {
-//            //只有一个线程能获得锁
-//            if (rLock.tryLock(0,-1,TimeUnit.MILLISECONDS)){
-//                for (Long userId : mainUserList) {
-//                    QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-//                    Page<User> userPage = userService.page(new Page<>(1,20),queryWrapper);
-//                    String key = String.format("yupao:user:recommend:%s",userId);
-//                    ValueOperations<String,Object> valueOperations = redisTemplate.opsForValue();
-//                    //写缓存
-//                    try {
-//                        valueOperations.set(key,userPage,30000, TimeUnit.MILLISECONDS);
-//                    } catch (Exception e) {
-//                        log.error("redis set key error",e);
-//                    }
-//                }
-//            }
-//
-//        } catch (InterruptedException e) {
-//            log.error("doCacheRecommendUser error",e);
-//        }finally {
-//            //只能释放自己的锁
-//            if (rLock.isHeldByCurrentThread()){
-//                rLock.unlock();
-//            }
-//        }
-//
-//    }
-//
-//
-//}
+package org.lpz.graduationprojectbackend.job;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.extern.slf4j.Slf4j;
+import org.lpz.graduationprojectbackend.mapper.ScheduleMapper;
+import org.lpz.graduationprojectbackend.model.domain.Schedule;
+import org.lpz.graduationprojectbackend.model.domain.User;
+import org.lpz.graduationprojectbackend.service.ScheduleService;
+import org.lpz.graduationprojectbackend.service.UserService;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+@Component
+@Slf4j
+public class PreCacheJob {
+
+    @Resource
+    private ScheduleService scheduleService;
+    @Resource
+    private ScheduleMapper scheduleMapper;
+
+    //秒 分 时 日 月 周
+    //每周的周一凌晨执行,更新后面的可预约人数
+    /**
+     *  0 0 0：表示凌晨 0 点 0 分 0 秒。
+     *  ?：表示不指定具体的日期（因为我们已经指定了周几）。
+     *  *：表示每个月。
+     *  MON：表示周一。
+     */
+
+    @Scheduled(cron = "0 0 0 ? * MON")
+    public void updateSchedule(){
+        List<Schedule> list = scheduleService.list().
+                stream().filter(item -> item.getEndTime().after(new Date())).collect(Collectors.toList());
+        for (Schedule item : list) {
+            item.setPeopleCount(item.getMaxCount());
+            scheduleMapper.updateById(item);
+        }
+
+    }
+
+
+}

@@ -1,6 +1,7 @@
 package org.lpz.graduationprojectbackend.controller;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.lpz.graduationprojectbackend.common.BaseResponse;
@@ -11,9 +12,12 @@ import org.lpz.graduationprojectbackend.model.domain.Activity;
 import org.lpz.graduationprojectbackend.model.domain.Joinactivities;
 import org.lpz.graduationprojectbackend.model.domain.News;
 import org.lpz.graduationprojectbackend.model.domain.User;
+import org.lpz.graduationprojectbackend.model.request.ActivityAddRequest;
 import org.lpz.graduationprojectbackend.model.request.ActivityDeleteRequest;
+import org.lpz.graduationprojectbackend.model.request.ActivityUpdateRequest;
 import org.lpz.graduationprojectbackend.model.request.UserDeleteRequest;
 import org.lpz.graduationprojectbackend.service.*;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -50,6 +54,31 @@ public class ActivitiesController {
 //        }
 
         List<Activity> activities = activityService.getActivities();
+        if (activities == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        return ResultUtils.success(activities);
+    }
+
+    /**
+     * 根据该用户的标签，为该用户推荐合适的活动
+     * @param request
+     * @return
+     */
+    @GetMapping("/recommend")
+    public BaseResponse<List<Activity>> recommendActivities(HttpServletRequest request){
+
+        if (request == null){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+
+        User loginUser = userService.getLoginUser(request);
+        if (loginUser == null) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+
+        List<Activity> activities = activityService.recommendActivities(loginUser);
         if (activities == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
@@ -138,13 +167,19 @@ public class ActivitiesController {
      * @return
      */
     @PostMapping("/create")
-    public BaseResponse<Boolean> addActivity(@RequestBody Activity activity) {
+    public BaseResponse<Boolean> addActivity(@RequestBody ActivityAddRequest activity) {
         if(activity == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
+        Activity activity1 = new Activity();
+        BeanUtils.copyProperties(activity,activity1);
 
-        boolean save = activityService.save(activity);
+        Gson gson = new Gson();
+        String tags = gson.toJson(activity.getTags());
+
+        activity1.setTags(tags);
+        boolean save = activityService.save(activity1);
 
         return ResultUtils.success(save);
 
@@ -178,13 +213,21 @@ public class ActivitiesController {
      */
     @PostMapping("/update")
     //因为前端的请求是json数据类型，所以需要使用@RequestBody注解，前提是post方式才会生效
-    public BaseResponse<Boolean> updateActivity(@RequestBody Activity activity, HttpServletRequest request){
+    public BaseResponse<Boolean> updateActivity(@RequestBody ActivityUpdateRequest activity, HttpServletRequest request){
         //检验数据是否为空
         if (activity == null){
             throw new BusinessException(ErrorCode.NO_AUTH);
         }
 
-        boolean b = activityService.updateById(activity);
+        Activity activity1 = new Activity();
+        BeanUtils.copyProperties(activity,activity1);
+
+        Gson gson = new Gson();
+        String tags = gson.toJson(activity.getTags());
+
+        activity1.setTags(tags);
+
+        boolean b = activityService.updateById(activity1);
         return ResultUtils.success(b);
     }
 

@@ -1,5 +1,7 @@
 package org.lpz.graduationprojectbackend.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.lpz.graduationprojectbackend.common.BaseResponse;
@@ -54,13 +56,28 @@ public class AppointmentController {
     }
 
 
+//    @GetMapping("/schedule")
+//    public BaseResponse<List<Schedule>> getSchedule(String department,String dateTime,Integer type) {
+//        if (StringUtils.isAnyBlank(department,dateTime) || (type != 0 && type != 1)) {
+//            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+//        }
+//
+//        List<Schedule> schedules = appointmentService.getSchedule(department,dateTime,type);
+//        if (schedules == null) {
+//            throw new BusinessException(ErrorCode.NULL_ERROR);
+//        }
+//
+//        return ResultUtils.success(schedules);
+//
+//    }
+
     @GetMapping("/schedule")
-    public BaseResponse<List<Schedule>> getSchedule(String department,String dateTime,Integer type) {
-        if (StringUtils.isAnyBlank(department,dateTime) || (type != 0 && type != 1)) {
+    public BaseResponse<List<Schedule>> getSchedule(String department,Integer type) {
+        if (department == null || (type != 0 && type != 1)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
-        List<Schedule> schedules = appointmentService.getSchedule(department,dateTime,type);
+        List<Schedule> schedules = appointmentService.getSchedule(department,type);
         if (schedules == null) {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
@@ -259,6 +276,17 @@ public class AppointmentController {
         boolean b = scheduleService.removeById(scheduleDeleteRequest.getId());//已经配置过逻辑删除，所以mybatis-plus会自动改为逻辑删除
         return ResultUtils.success(b);
 
+    }
+
+    @GetMapping("/update")
+    public BaseResponse<Integer> updateType(long id) {
+        if (id < 0 ) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        int i = appointmentService.updateType(id);
+
+        return ResultUtils.success(i);
     }
 
 
